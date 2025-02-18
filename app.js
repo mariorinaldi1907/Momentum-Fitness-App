@@ -25,9 +25,11 @@ app.use(session({
 // Import routes
 const authRoutes = require("./routes/auth");
 const indexRoutes = require("./routes/index");
+const nutritionRoutes = require("./routes/nutrition");
 
 app.use("/", indexRoutes);
 app.use("/", authRoutes);
+app.use("/", nutritionRoutes);
 
 // Start the server
 app.listen(PORT, () => {
