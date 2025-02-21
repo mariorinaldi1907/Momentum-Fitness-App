@@ -26,10 +26,14 @@ app.use(session({
 const authRoutes = require("./routes/auth");
 const indexRoutes = require("./routes/index");
 const nutritionRoutes = require("./routes/nutrition");
+const communityRoutes = require("./routes/community");
+const adminRoutes = require("./routes/admin");
 
 app.use("/", indexRoutes);
 app.use("/", authRoutes);
 app.use("/", nutritionRoutes);
+app.use("/", communityRoutes);
+app.use("/", adminRoutes);
 
 // Start the server
 app.listen(PORT, () => {
