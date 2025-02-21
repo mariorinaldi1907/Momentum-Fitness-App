@@ -25,10 +25,12 @@ app.use(session({
 // Import routes
 const authRoutes = require("./routes/auth");
 const indexRoutes = require("./routes/index");
+const activitiesRoutes = require("./routes/activities");
 const nutritionRoutes = require("./routes/nutrition");
 
 app.use("/", indexRoutes);
 app.use("/", authRoutes);
+app.use("/", activitiesRoutes);
 app.use("/", nutritionRoutes);
 
 // Start the server
