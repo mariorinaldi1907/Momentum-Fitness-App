@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrition Tracker</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .meal-container {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .fun-facts {
+            background-color: #ffcccb;
+            /* Light pink */
+            padding: 20px;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 10px;
+            color: #333;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .fun-facts p {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .carousel-control-prev-icon,
+        .carousel-control-next-icon {
+            background-color: #333;
+            /* Dark color for better visibility */
+            border-radius: 50%;
+        }
+
+        .delete-btn {
+            margin-left: 10px;
+            color: red;
+            cursor: pointer;
+        }
+        .meal-container ul {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    </style>
+</head>
+
+<body>
+    <header class="bg-light py-3">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h1 class="h3 text-success mb-0">MOMENTUM</h1>
+            <nav>
+                <a href="/" class="btn btn-link">Home</a>
+                <a href="/activities" class="btn btn-link">Activities</a>
+                <a href="/nutrition" class="btn btn-link">Nutrition</a>
+                <a href="/communities" class="btn btn-link">Communities</a>
+                <a href="/logout" class="btn btn-outline-danger">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container mt-4">
+        <h1 class="mb-3">Nutrition</h1>
+
+        <!-- Progress Bars -->
+        <div>
+            <!-- Calories -->
+            <p>Calories (<%= progressData.calories %> / <%= dailyGoal.calories %> kcal)</p>
+            <div class="progress">
+                <div class="progress-bar bg-info" role="progressbar"></div>
+            </div>
+
+            <!-- Carbs -->
+            <p>Carbohydrates (<%= progressData.carbs %> / <%= dailyGoal.carbs %> g)</p>
+            <div class="progress">
+                <div class="progress-bar bg-primary" role="progressbar"></div>
+            </div>
+
+            <!-- Protein -->
+            <p>Protein (<%= progressData.protein %> / <%= dailyGoal.protein %> g)</p>
+            <div class="progress">
+                <div class="progress-bar bg-danger" role="progressbar"></div>
+            </div>
+
+            <!-- Fats -->
+            <p>Fats (<%= progressData.fats %> / <%= dailyGoal.fats %> g)</p>
+            <div class="progress">
+                <div class="progress-bar bg-warning" role="progressbar"></div>
+            </div>
+
+            <!-- Fibers -->
+            <p>Fibers (<%= progressData.fibers %> / <%= dailyGoal.fibers %> g)</p>
+            <div class="progress">
+                <div class="progress-bar bg-success" role="progressbar"></div>
+            </div>
+
+            <!-- Sodium -->
+            <p>Sodium (<%= progressData.sodium %> / <%= dailyGoal.sodium %> mg)</p>
+            <div class="progress">
+                <div class="progress-bar bg-secondary" role="progressbar"></div>
+            </div>
+
+        </div>
+
+        <!-- Fun Facts About Food (Slideshow) -->
+        <div class="fun-facts mt-4">
+            <div id="funFactsSlideshow" class="carousel slide fun-facts mt-4" data-bs-interval="false">
+                <div class="carousel-inner">
+                    <div class="carousel-item">
+                        <p>"Broccoli contains more protein per calorie than steak!"</p>
+                    </div>
+                    <div class="carousel-item">
+                        <p>"Honey never spoils. Archaeologists found 3000-year-old honey in ancient Egyptian tombs!"</p>
+                    </div>
+                    <div class="carousel-item">
+                        <p>"Carrots were originally purple, not orange!"</p>
+                    </div>
+                    <div class="carousel-item">
+                        <p>"Apples float in water because they are 25% air!"</p>
+                    </div>
+                    <div class="carousel-item">
+                        <p>"An avocado has more potassium than a banana!"</p>
+                    </div>
+                    <div class="carousel-item">
+                        <p>"Red bell peppers have more Vitamin C than oranges!"</p>
+                    </div>
+                    <div class="carousel-item">
+                        <p>"Eating celery burns more calories than the celery itself!"</p>
+                    </div>
+                </div>
+
+                <!-- Manual Controls -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#funFactsSlideshow"
+                    data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#funFactsSlideshow"
+                    data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Meal Logging -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="meal-container text-center">
+                    <button class="btn btn-warning" id="logMealBtn">Log a Meal</button>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="meal-container">
+                    <p class="text-center">Meals enjoyed by your friends</p>
+                    <ul class="list-group" id="allLoggedMeals">
+                        <% if (typeof allLoggedMeals !== 'undefined' && allLoggedMeals.length > 0) { %>
+                            <% allLoggedMeals.forEach(meal => { %>
+                                <li class="list-group-item">
+                                    <strong><%= meal.name %></strong> - <%= meal.calories %> kcal 
+                                    <small>(<%= meal.date %>)</small>
+                                </li>
+                            <% }) %>
+                        <% } else { %>
+                            <li class="list-group-item">No meals logged by any users yet.</li>
+                        <% } %>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meal Form -->
+        <div id="mealFormContainer" style="display: none; margin-top: 20px;">
+            <h2>Log a Meal</h2>
+            <form id="mealForm">
+                <input type="text" id="mealName" placeholder="Meal Name" required>
+
+                <h3>Select Foods:</h3>
+                <div id="foodList">
+                    <% items.forEach(item=> { %>
+                        <input type="checkbox" name="selectedFoods" value="<%= item.id %>"
+                            data-food='<%= JSON.stringify(item) %>'>
+                        <label>
+                            <%= item.name %> - <%= item.calories %> kcal
+                        </label><br>
+                        <% }); %>
+                </div>
+
+                <h3>Or Add a Custom Food:</h3>
+                <input type="text" id="customName" placeholder="Food Name">
+                <input type="number" id="customCalories" placeholder="Calories (kcal)">
+                <input type="number" id="customCarbs" placeholder="Carbs (g)">
+                <input type="number" id="customProtein" placeholder="Protein (g)">
+                <input type="number" id="customFats" placeholder="Fats (g)">
+                <input type="number" id="customFibers" placeholder="Fibers (g)">
+                <input type="number" id="customSodium" placeholder="Sodium (g)">
+                <button type="button" class="btn btn-info" id="addFoodBtn">Add Food</button>
+
+                <button type="submit" class="btn btn-warning">Log Meal</button>
+            </form>
+        </div>
+
+        <!-- Logged Meals -->
+        <div class="mt-4">
+            <h2>Logged Meals</h2>
+            <ul id="loggedMeals"></ul>
+        </div>
+    </div>
+
+    <script>
+        // meal logging
+        let meals = JSON.parse(localStorage.getItem("loggedMeals")) || [];
+
+        function updateMeals() {
+            const mealList = document.getElementById("loggedMeals");
+            mealList.innerHTML = "";
+            meals.forEach((meal, index) => {
+                let li = document.createElement("li");
+                li.innerHTML = `<strong>${meal.name}</strong> - ${meal.calories} kcal
+                                <span class="delete-btn" onclick="deleteMeal(${index})">❌</span>`;
+                mealList.appendChild(li);
+            });
+            localStorage.setItem("loggedMeals", JSON.stringify(meals));
+        }
+
+        function deleteMeal(index) {
+            meals.splice(index, 1);
+            updateMeals();
+        }
+
+        document.getElementById("logMealBtn").addEventListener("click", function () {
+            let formContainer = document.getElementById("mealFormContainer");
+            formContainer.style.display = formContainer.style.display === "none" ? "block" : "none";
+        });
+
+        document.getElementById("addFoodBtn").addEventListener("click", function () {
+            const name = document.getElementById("customName").value;
+            const calories = parseInt(document.getElementById("customCalories").value) || 0;
+            if (!name) return alert("Please enter a food name.");
+
+            let newFood = { id: Date.now(), name, calories };
+            let foodList = document.getElementById("foodList");
+
+            let checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.name = "selectedFoods";
+            checkbox.value = newFood.id;
+            checkbox.setAttribute("data-food", JSON.stringify(newFood));
+
+            let label = document.createElement("label");
+            label.innerHTML = `${name} - ${calories} kcal`;
+
+            foodList.appendChild(checkbox);
+            foodList.appendChild(label);
+            foodList.appendChild(document.createElement("br"));
+        });
+
+        document.getElementById("mealForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const mealName = document.getElementById("mealName").value.trim();
+            if (!mealName) return;
+
+            const selectedFoods = Array.from(document.querySelectorAll('input[name="selectedFoods"]:checked'))
+                .map(input => JSON.parse(input.getAttribute("data-food")));
+
+            let totalCalories = selectedFoods.reduce((sum, food) => sum + food.calories, 0);
+            meals.push({ name: mealName, calories: totalCalories });
+
+            updateMeals();
+            this.reset();
+            document.getElementById("mealFormContainer").style.display = "none";
+        });
+
+        updateMeals();
+
+        // Progress Bar
+        const progressData = <%- JSON.stringify(progressData) %>;
+        const dailyGoal = <%- JSON.stringify(dailyGoal) %>;
+
+        // Function to update a progress bar
+        function updateProgressBar(elementSelector, value, goal, unit = '') {
+            const element = document.querySelector(elementSelector);
+            const percentage = ((value / goal) * 100).toFixed(1);
+            element.style.width = `${percentage}%`;
+            element.innerText = `${value}${unit} (${percentage}%)`;
+        }
+
+        // Function to refresh all progress bars
+        function refreshProgressBars() {
+            updateProgressBar('.progress-bar.bg-info', progressData.calories, dailyGoal.calories, ' kcal');
+            updateProgressBar('.progress-bar.bg-primary', progressData.carbs, dailyGoal.carbs, 'g');
+            updateProgressBar('.progress-bar.bg-danger', progressData.protein, dailyGoal.protein, 'g');
+            updateProgressBar('.progress-bar.bg-warning', progressData.fats, dailyGoal.fats, 'g');
+            updateProgressBar('.progress-bar.bg-success', progressData.fibers, dailyGoal.fibers, 'g');
+            updateProgressBar('.progress-bar.bg-secondary', progressData.sodium, dailyGoal.sodium, 'mg');
+        }
+
+        // Call the function on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            refreshProgressBars();
+        });
+
+        //Fun facts slideshow
+        document.addEventListener("DOMContentLoaded", () => {
+        const funFactsCarousel = document.querySelector('#funFactsSlideshow');
+        const carouselItems = funFactsCarousel.querySelectorAll('.carousel-item');
+
+        // Generate a random index for the initial slide
+        const randomIndex = Math.floor(Math.random() * carouselItems.length);
+
+        // Add 'active' class to the random slide and remove from others
+        carouselItems.forEach((item, index) => {
+            item.classList.toggle('active', index === randomIndex);
+        });
+
+        // Initialize the Bootstrap Carousel with both automatic and manual controls
+        const carousel = new bootstrap.Carousel(funFactsCarousel, {
+            interval: 5000, // Automatic cycling every 5 seconds
+            wrap: true, // Allow cycling back to the first slide
+            pause: 'hover' // Pause auto-cycling on hover, resume when not hovering
+        });
+
+        // Ensure manual controls do not stop the automatic sliding
+        funFactsCarousel.addEventListener('slid.bs.carousel', () => {
+            carousel.cycle(); // Restart the automatic cycle after manual slide
+        });
+    });
+    </script>
+    </script>
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-3 text-center">
+        <p>&copy; 2025 Momentum Fitness. All Rights Reserved.</p>
+    </footer>
+</body>
+
+</html>
