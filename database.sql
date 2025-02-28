@@ -21,5 +21,20 @@ CREATE TABLE IF NOT EXISTS user_websites (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+-- Logged Meals Table
+CREATE TABLE IF NOT EXISTS logged_meals (
+    meal_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    meal_name TEXT NOT NULL,
+    calories INTEGER DEFAULT 0,
+    protein INTEGER DEFAULT 0,
+    carbs INTEGER DEFAULT 0,
+    fats INTEGER DEFAULT 0,
+    fibers INTEGER DEFAULT 0,
+    sodium INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 COMMIT;
 

@@ -1,4 +1,5 @@
 const sqlite3 = require("sqlite3").verbose();
+const path = require("path");
 
 // Connect to the database
 const db = new sqlite3.Database("./database.db", (err) => {
@@ -25,6 +26,22 @@ db.run(`
         user_id INTEGER NOT NULL,
         website_url TEXT NOT NULL UNIQUE,
         website_name TEXT NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
+    )
+`);
+
+db.run(`
+    CREATE TABLE IF NOT EXISTS logged_meals (
+        meal_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        meal_name TEXT NOT NULL,
+        calories INTEGER DEFAULT 0,
+        protein INTEGER DEFAULT 0,
+        carbs INTEGER DEFAULT 0,
+        fats INTEGER DEFAULT 0,
+        fibers INTEGER DEFAULT 0,
+        sodium INTEGER DEFAULT 0,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
     )

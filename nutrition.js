@@ -1,164 +1,185 @@
 const express = require("express");
 const router = express.Router();
+const db = require("../db");
 
 // Store logged meals in session
 router.use((req, res, next) => {
   if (!req.session.loggedMeals) {
     req.session.loggedMeals = [];
-
-    // Initialize progress data (current set to >0 to check if bar is showing)
     req.session.progressData = {
-      calories: 100,
-      carbs: 10,
-      protein: 10,
-      fats: 10,
-      fibers: 10,
-      sodium: 10,
+      calories: 0,
+      carbs: 0,
+      protein: 0,
+      fats: 0,
+      fibers: 0,
+      sodium: 0,
     };
   }
   next();
 });
 
-// Dummy food items
-const items = [
-  {
-    id: 1,
-    name: "Chicken Breast",
-    calories: 165,
-    protein: 31,
-    carbs: 0,
-    fats: 3.6,
-    fibers: 0,
-    sodium: 70,
-  },
-  {
-    id: 2,
-    name: "Brown Rice",
-    calories: 215,
-    protein: 5,
-    carbs: 45,
-    fats: 1.6,
-    fibers: 3.5,
-    sodium: 10,
-  },
-  {
-    id: 3,
-    name: "Broccoli",
-    calories: 55,
-    protein: 4,
-    carbs: 11,
-    fats: 0.5,
-    fibers: 2.4,
-    sodium: 30,
-  },
-];
-
-const dailyGoal = {
-  calories: 2000,
-  carbs: 300,
-  protein: 150,
-  fats: 70,
-  fibers: 30,
-  sodium: 2300,
-};
-
-const allLoggedMeals = [
-  { userId: 1, name: "Chicken Salad", calories: 350, date: "2025-02-01" },
-  { userId: 2, name: "Grilled Fish", calories: 400, date: "2025-02-02" },
-  { userId: 3, name: "Veggie Stir Fry", calories: 300, date: "2025-02-03" },
-  { userId: 4, name: "Pasta Alfredo", calories: 600, date: "2025-02-04" },
-  { userId: 1, name: "Fruit Bowl", calories: 200, date: "2025-02-05" },
-];
-
 // GET route
-router.get("/nutrition", (req, res) => {    
-  res.render("nutrition", {
-      progressData: req.session.progressData,
-      loggedMeals: req.session.loggedMeals || [],
-      items,
-      dailyGoal,
-      allLoggedMeals,
+router.get("/nutrition", (req, res) => {
+  const currentUserId = req.session.userId || 1;
+
+  // First, get the current user's meals
+  const userMealsQuery = `
+      SELECT * FROM logged_meals
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+  `;
+
+  // Then, get other users' meals
+  const otherMealsQuery = `
+      SELECT u.username, lm.*
+      FROM logged_meals lm
+      JOIN users u ON lm.user_id = u.user_id
+      WHERE lm.user_id != ?
+      ORDER BY lm.created_at DESC
+  `;
+
+  db.all(userMealsQuery, [currentUserId], (err, loggedMeals) => {
+    if (err) {
+      console.error("Error fetching user's meals:", err);
+      return res.send("An error occurred while fetching your meals.");
+    }
+
+    console.log("Fetched user meals:", loggedMeals);
+
+    db.all(otherMealsQuery, [currentUserId], (err, otherUsersMeals) => {
+      if (err) {
+        console.error("Error fetching other users' meals:", err);
+        return res.send("An error occurred while fetching other users' meals.");
+      }
+
+      console.log("Fetched meals by other users:", otherUsersMeals);
+
+      // Progress data
+      let progressData = {
+        calories: 0,
+        carbs: 0,
+        protein: 0,
+        fats: 0,
+        fibers: 0,
+        sodium: 0,
+      };
+
+      // Sum up nutritional values from logged meals
+      loggedMeals.forEach((meal) => {
+        progressData.calories += meal.calories || 0;
+        progressData.carbs += meal.carbs || 0;
+        progressData.protein += meal.protein || 0;
+        progressData.fats += meal.fats || 0;
+        progressData.fibers += meal.fibers || 0;
+        progressData.sodium += meal.sodium || 0;
+      });
+
+      res.render("nutrition", {
+        loggedMeals,
+        otherUsersMeals,
+        progressData,
+        dailyGoal: {
+          calories: 2000,
+          carbs: 300,
+          protein: 150,
+          fats: 70,
+          fibers: 30,
+          sodium: 2300,
+        },
+      });
+    });
   });
 });
 
-// POST route to log a meal and update progress
+// POST route to log a meal
 router.post("/log-meal", (req, res) => {
-  const {
-    mealName,
-    selectedFoods,
-    customName,
-    customCalories,
-    customProtein,
-    customCarbs,
-    customFats,
-    customFibers,
-    customSodium
-  } = req.body;
-  if (!mealName) return res.redirect("/nutrition");
+  const { mealName, calories, protein, carbs, fats, fibers, sodium } = req.body;
+  const userId = req.session.userId || 1;
 
-  let totalCalories = 0,
-    totalProtein = 0,
-    totalCarbs = 0,
-    totalFats = 0,
-    totalFibers = 0,
-    totalSodium = 0;
-  const selectedIds = Array.isArray(selectedFoods)
-    ? selectedFoods
-    : [selectedFoods];
+  const query = `
+      INSERT INTO logged_meals 
+      (user_id, meal_name, calories, protein, carbs, fats, fibers, sodium)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
 
-  selectedIds.forEach((id) => {
-    const food = items.find((item) => item.id == id);
-    if (food) {
-      totalCalories += food.calories;
-      totalProtein += food.protein;
-      totalCarbs += food.carbs;
-      totalFats += food.fats;
-      totalFibers += food.fibers;
-      totalSodium += food.sodium;
+  db.run(
+    query,
+    [userId, mealName, calories, protein, carbs, fats, fibers, sodium],
+    function (err) {
+      if (err) {
+        console.error("Error logging meal:", err);
+        return res.send("An error occurred while logging the meal.");
+      }
+      console.log("Meal logged with ID:", this.lastID);
+      res.redirect("/nutrition");
     }
+  );
+});
+
+// Edit a Meal
+router.post("/edit-meal/:mealId", (req, res) => {
+  const mealId = req.params.mealId;
+  const { mealName, calories, protein, carbs, fats, fibers, sodium } = req.body;
+
+  const query = `
+      UPDATE logged_meals 
+      SET meal_name = ?, calories = ?, protein = ?, carbs = ?, fats = ?, fibers = ?, sodium = ?
+      WHERE meal_id = ?
+  `;
+
+  db.run(
+    query,
+    [mealName, calories, protein, carbs, fats, fibers, sodium, mealId],
+    function (err) {
+      if (err) {
+        console.error("Error updating meal:", err);
+        return res.send("An error occurred while updating the meal.");
+      }
+      res.redirect("/nutrition");
+    }
+  );
+});
+
+// Delete a Meal
+router.post("/delete-meal/:mealId", (req, res) => {
+  const mealId = req.params.mealId;
+
+  const query = `DELETE FROM logged_meals WHERE meal_id = ?`;
+
+  db.run(query, [mealId], function (err) {
+    if (err) {
+      console.error("Error deleting meal:", err);
+      return res.send("An error occurred while deleting the meal.");
+    }
+    res.redirect("/nutrition");
   });
+});
 
-  if (
-    customName &&
-    customCalories &&
-    customProtein &&
-    customCarbs &&
-    customFats &&
-    customFibers &&
-    customSodium
-  ) {
-    totalCalories += parseInt(customCalories);
-    totalProtein += parseInt(customProtein);
-    totalCarbs += parseInt(customCarbs);
-    totalFats += parseInt(customFats);
-    totalFibers += parseInt(customFibers);
-    totalSodium += parseInt(customSodium);
-  }
+// Get Progress Data
+router.get("/progress-data", (req, res) => {
+  const currentUserId = req.session.userId || 1;
 
-  req.session.loggedMeals.push({
-    name: mealName,
-    calories: totalCalories,
-    protein: totalProtein,
-    carbs: totalCarbs,
-    fats: totalFats,
-    fibers: totalFibers,
-    sodium: totalSodium,
-    date: new Date().toLocaleDateString(),
+  const query = `
+      SELECT 
+          SUM(calories) AS calories,
+          SUM(protein) AS protein,
+          SUM(carbs) AS carbs,
+          SUM(fats) AS fats,
+          SUM(fibers) AS fibers,
+          SUM(sodium) AS sodium
+      FROM logged_meals
+      WHERE user_id = ?
+  `;
+
+  db.get(query, [currentUserId], (err, progressData) => {
+    if (err) {
+      console.error("Error fetching progress data:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while fetching progress data." });
+    }
+    res.json(progressData);
   });
-
-  // Update progress data
-  console.log("before loggin", req.session.progressData);
-
-  req.session.progressData.calories += totalCalories;
-  req.session.progressData.protein += totalProtein;
-  req.session.progressData.carbs += totalCarbs;
-  req.session.progressData.fats += totalFats;
-  req.session.progressData.fibers += totalFibers;
-  req.session.progressData.sodium += totalSodium;
-
-  console.log("after logging", req.session.progressData);
-
-  res.redirect("/nutrition");
 });
 
 module.exports = router;
