@@ -54,7 +54,7 @@
     <div class="container">
         <h2>Body Measurements Tracker</h2>
 
-        <!-- 📌 Cards for Latest Values -->
+        <!-- Cards for Latest Values -->
         <div class="row text-center">
             <div class="col-md-3">
                 <div class="card bg-light">
@@ -133,7 +133,32 @@
        <script>
     // Get Progress Data from Server
     const progressData = <%- JSON.stringify(progressData) %> || [];
-    console.log("📊 Progress Data Received:", progressData);
+    console.log("Progress Data Received:", progressData);
+
+    // Ensure progressData exists
+    if (!progressData || progressData.length === 0) {
+    console.warn("No progress data available.");
+} else {
+    console.log("Progress Data Received:", progressData);
+}
+
+// Sort data from oldest to newest
+progressData.sort((a, b) => new Date(a.date_logged) - new Date(b.date_logged));
+
+// Get the most recent data for each category
+const latestWeight = progressData.filter(item => item.category === "weight").pop();
+const latestBMI = progressData.filter(item => item.category === "bmi").pop();
+const latestBodyFat = progressData.filter(item => item.category === "bodyFat").pop();
+const latestMuscleMass = progressData.filter(item => item.category === "muscleMass").pop();
+
+// Update the card values dynamically
+document.getElementById("weightValue").innerText = latestWeight ? `${latestWeight.value} kg` : "No Data";
+document.getElementById("bmiValue").innerText = latestBMI ? latestBMI.value : "No Data";
+document.getElementById("bodyFatValue").innerText = latestBodyFat ? `${latestBodyFat.value}%` : "No Data";
+document.getElementById("muscleMassValue").innerText = latestMuscleMass ? `${latestMuscleMass.value}%` : "No Data";
+
+
+
 
     //  Sort by Oldest to Newest
     progressData.sort((a, b) => new Date(a.date_logged) - new Date(b.date_logged));
