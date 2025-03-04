@@ -131,28 +131,25 @@ router.get("/sleep-tracker", (req, res) => {
         return res.redirect("/login");
     }
 
-    const userId = req.session.userId;
-
     const query = `
         SELECT sleep_hours, sleep_quality, date_logged 
-        FROM user_progress 
-        WHERE user_id = ? AND category = 'sleep' 
+        FROM sleep_tracker 
         ORDER BY date_logged DESC
     `;
 
-    db.all(query, [userId], (err, sleepData) => {
+    db.all(query, [], (err, sleepData) => {
         if (err) {
             console.error("SQL Error fetching sleep data:", err.message);
             return res.send("Error fetching sleep data: " + err.message);
         }
 
         if (!sleepData || sleepData.length === 0) {
-            console.warn("No sleep data found for user:", userId);
+            console.warn("No sleep data found.");
         } else {
             console.log("Fetched sleep data:", sleepData);
         }
 
-        // Ensure all values are safe numbers
+        // Calculate average values
         const avgSleepHours = sleepData.length > 0 
             ? (sleepData.reduce((sum, entry) => sum + (entry.sleep_hours || 0), 0) / sleepData.length).toFixed(1) 
             : "0.0";
@@ -172,7 +169,6 @@ router.post("/log/sleep", (req, res) => {
         return res.redirect("/login");
     }
 
-    const userId = req.session.userId;
     const { sleep_hours, sleep_quality } = req.body;
 
     if (isNaN(sleep_hours) || sleep_hours < 0 || sleep_hours > 24) {
@@ -183,14 +179,14 @@ router.post("/log/sleep", (req, res) => {
         return res.send("Invalid sleep quality. Must be between 1 and 10.");
     }
 
-    const date_logged = new Date().toISOString(); // Store in UTC format
+    const date_logged = new Date().toISOString();
 
     const query = `
-        INSERT INTO user_progress (user_id, category, value, sleep_hours, sleep_quality, date_logged)
-        VALUES (?, 'sleep', NULL, ?, ?, ?)
+        INSERT INTO sleep_tracker (sleep_hours, sleep_quality, date_logged)
+        VALUES (?, ?, ?)
     `;
 
-    db.run(query, [userId, sleep_hours, sleep_quality, date_logged], (err) => {
+    db.run(query, [sleep_hours, sleep_quality, date_logged], (err) => {
         if (err) {
             console.error("SQL Error logging sleep data:", err.message);
             return res.send("Error logging sleep data: " + err.message);
