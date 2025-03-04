@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS workout_progress (
     completed_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE sleep_tracker (
+CREATE TABLE IF NOT EXISTS sleep_tracker (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date_logged DATETIME DEFAULT CURRENT_TIMESTAMP,
     sleep_hours REAL,
