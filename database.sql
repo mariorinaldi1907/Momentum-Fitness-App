@@ -36,5 +36,23 @@ CREATE TABLE IF NOT EXISTS logged_meals (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+
+
+CREATE TABLE IF NOT EXISTS user_progress (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    category TEXT,
+    value INTEGER,
+    date_logged TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS workout_progress (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    workout TEXT NOT NULL,
+    completed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 COMMIT;
 
