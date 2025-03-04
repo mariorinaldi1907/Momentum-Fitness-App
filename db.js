@@ -71,4 +71,17 @@ db.run(`
     )
 `);
 
+// create user_progress 
+db.run(`
+CREATE TABLE IF NOT EXISTS user_progress (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    category TEXT NOT NULL,
+    value REAL NOT NULL,
+    date_logged TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+)
+`);    
+
+
 module.exports = db;
