@@ -47,4 +47,28 @@ db.run(`
     )
 `);
 
+// Create activities table
+db.run(`
+    CREATE TABLE IF NOT EXISTS activities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        duration INTEGER NOT NULL,
+        difficulty TEXT NOT NULL
+    )
+`);
+
+// Create user_activities table to track progress
+db.run(`
+    CREATE TABLE IF NOT EXISTS user_activities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        activity_id INTEGER NOT NULL,
+        progress INTEGER DEFAULT 0,
+        completed BOOLEAN DEFAULT 0,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE
+    )
+`);
+
 module.exports = db;
