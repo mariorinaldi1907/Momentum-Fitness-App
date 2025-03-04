@@ -6,25 +6,186 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nutrition Tracker</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <style>
+        body {
+            background-color: #e0efe1;
+        }
+
         .meal-container {
             background-color: #f5f5f5;
             padding: 15px;
             border-radius: 10px;
         }
 
-        .fun-facts {
-            background-color: pink;
-            padding: 15px;
+        .meal-container ul {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .progress {
+            background-color: #e0efe1;
+            height: 25px;
+            border-radius: 12px;
+            border: 1px solid #000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+
+        .progress-bar {
+            border-radius: 12px;
             font-weight: bold;
+            color: #000;
+            display: flex;
+            align-items: center;
+            padding-left: 15px;
+            transition: width 0.3s ease;
+        }
+
+        /* Calorie */
+        .progress-bar.nutrient-calories {
+            background-color: #FF6B6B;
+        }
+
+        /* Carbs */
+        .progress-bar.nutrient-carbs {
+            background-color: #4ECDC4;
+        }
+
+        /* Protein */
+        .progress-bar.nutrient-protein {
+            background-color: #45B7D1;
+        }
+
+        /* Fats */
+        .progress-bar.nutrient-fats {
+            background-color: #96CEB4;
+        }
+
+        /* Fibers */
+        .progress-bar.nutrient-fibers {
+            background-color: #FFEEAD;
+        }
+
+        /* Sodium */
+        .progress-bar.nutrient-sodium {
+            background-color: #D4A5A5;
+        }
+
+        .fun-facts {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            border: none;
+        }
+
+        .fun-facts h4 {
             text-align: center;
+            margin-top: 20px;
+        }
+
+        .carousel-item {
+            min-height: 150px;
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: multiply;
             border-radius: 10px;
+        }
+
+        .carousel-item::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.3));
+            border-radius: 10px;
+        }
+
+        /* Food-themed backgrounds for each slide (free images from unsplash) */
+        .carousel-item:nth-child(1) {
+            background-image: url('https://images.unsplash.com/photo-1540189549336-e6e99c3679fe');
+        }
+
+        .carousel-item:nth-child(2) {
+            background-image: url('https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445');
+        }
+
+        .carousel-item:nth-child(3) {
+            background-image: url('https://images.unsplash.com/photo-1565299624946-b28f40a0ae38');
+        }
+
+        .carousel-item:nth-child(4) {
+            background-image: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836');
+        }
+
+        .carousel-item:nth-child(5) {
+            background-image: url('https://images.unsplash.com/photo-1482049016688-2d3e1b311543');
+        }
+
+        .carousel-item:nth-child(6) {
+            background-image: url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd');
+        }
+
+        .carousel-item:nth-child(7) {
+            background-image: url('https://images.unsplash.com/photo-1467003909585-2f8a72700288');
+        }
+
+        .carousel-item p {
+            position: relative;
+            z-index: 1;
+            color: #ffffff;
+            font-size: 1.4rem;
+            padding: 30px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+            font-style: italic;
+            line-height: 1.6;
+        }
+
+        .carousel-control-prev,
+        .carousel-control-next {
+            width: 50px;
+            height: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 50%;
+            background: rgb(110, 110, 110, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .carousel-control-prev-icon,
+        .carousel-control-next-icon {
+            filter: invert(1);
+            width: 1.5rem;
+            height: 1.5rem;
         }
 
         .delete-btn {
             margin-left: 10px;
             color: red;
             cursor: pointer;
+        }
+
+        #mealFormContainer {
+            display: none;
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        #mealFormContainer.show {
+            display: block;
+            max-height: 500px;
+        }
+
+        .edit-meal-form {
+            display: none;
+        }
+
+        .edit-meal-form.show {
+            display: block;
         }
     </style>
 </head>
@@ -47,160 +208,266 @@
         <h1 class="mb-3">Nutrition</h1>
 
         <!-- Progress Bars -->
-        <div>
-            <p>Calories <span id="totalCalories">0 / 2000</span></p>
-            <div class="progress">
-                <div class="progress-bar bg-info" style="width: 0%"></div>
-            </div>
+        <div id="progressBars">
+            <% const progressPercent=(current, goal)=> ((current / goal) * 100).toFixed(1); %>
+                <% const nutrients=['calories', 'carbs' , 'protein' , 'fats' , 'fibers' , 'sodium' ]; %>
 
-            <p>Carbohydrates <span id="totalCarbs">0g / 300g</span></p>
-            <div class="progress">
-                <div class="progress-bar bg-primary" style="width: 0%"></div>
-            </div>
-
-            <p>Proteins <span id="totalProtein">0g / 150g</span></p>
-            <div class="progress">
-                <div class="progress-bar bg-danger" style="width: 0%"></div>
-            </div>
-
-            <p>Fats <span id="totalFats">0g / 70g</span></p>
-            <div class="progress">
-                <div class="progress-bar bg-warning" style="width: 0%"></div>
-            </div>
-
-            <p>Fibers <span id="totalFibers">0g / 30g</span></p>
-            <div class="progress">
-                <div class="progress-bar bg-success" style="width: 0%"></div>
-            </div>
-
-            <p>Sodium <span id="totalSodium">0mg / 2300mg</span></p>
-            <div class="progress">
-                <div class="progress-bar bg-secondary" style="width: 0%"></div>
-            </div>
+                    <% nutrients.forEach(nutrient=> { %>
+                        <p>
+                            <%= nutrient.charAt(0).toUpperCase() + nutrient.slice(1) %>
+                                (<%= progressData[nutrient] %> / <%= dailyGoal[nutrient] %>)
+                        </p>
+                        <div class="progress mb-2">
+                            <div class="progress-bar nutrient-<%= nutrient %>" role="progressbar"
+                                style="width: <%= progressPercent(progressData[nutrient], dailyGoal[nutrient]) %>%; max-width: 100%;"
+                                aria-valuenow="<%= progressPercent(progressData[nutrient], dailyGoal[nutrient]) %>"
+                                aria-valuemin="0" aria-valuemax="100">
+                                <%= progressPercent(progressData[nutrient], dailyGoal[nutrient]) %>%
+                            </div>
+                        </div>
+                        <% }) %>
         </div>
 
+        <!-- Fun Facts About Food (Slideshow) -->
         <div class="fun-facts mt-4">
-            <p>Fun Facts About Food</p>
+            <h4>Fun Facts About Food!</h4>
+            <div id="funFactsSlideshow" class="carousel slide fun-facts mt-4" data-bs-interval="false">
+                <div class="carousel-inner">
+                    <div class="carousel-item">
+                        <p>"Broccoli contains more protein per calorie than steak!"</p>
+                    </div>
+                    <div class="carousel-item">
+                        <p>"Honey never spoils. Archaeologists found 3000-year-old honey in ancient Egyptian tombs!"</p>
+                    </div>
+                    <div class="carousel-item">
+                        <p>"Carrots were originally purple, not orange!"</p>
+                    </div>
+                    <div class="carousel-item">
+                        <p>"Apples float in water because they are 25% air!"</p>
+                    </div>
+                    <div class="carousel-item">
+                        <p>"An avocado has more potassium than a banana!"</p>
+                    </div>
+                    <div class="carousel-item">
+                        <p>"Red bell peppers have more Vitamin C than oranges!"</p>
+                    </div>
+                    <div class="carousel-item">
+                        <p>"Eating celery burns more calories than the celery itself!"</p>
+                    </div>
+                </div>
+
+                <!-- Manual Controls -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#funFactsSlideshow"
+                    data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#funFactsSlideshow"
+                    data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
         </div>
 
         <!-- Meal Logging -->
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="meal-container text-center">
-                    <button class="btn btn-warning" id="logMealBtn">Log a Meal</button>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="meal-container">
-                    <p class="text-center">Meals enjoyed by your friends</p>
-                </div>
-            </div>
+        <div class="meal-container text-center mt-4">
+            <button class="btn btn-warning" id="logMealBtn">Log a Meal</button>
         </div>
 
-        <!-- Meal Form -->
-        <div id="mealFormContainer" style="display: none; margin-top: 20px;">
+        <!-- Log Meal Form (Initially Hidden) -->
+        <div id="mealFormContainer" class="mt-4">
             <h2>Log a Meal</h2>
-            <form id="mealForm">
-                <input type="text" id="mealName" placeholder="Meal Name" required>
-
-                <h3>Select Foods:</h3>
-                <div id="foodList">
-                    <% items.forEach(item=> { %>
-                        <input type="checkbox" name="selectedFoods" value="<%= item.id %>"
-                            data-food='<%= JSON.stringify(item) %>'>
-                        <label>
-                            <%= item.name %> - <%= item.calories %> kcal
-                        </label><br>
-                        <% }); %>
-                </div>
-
-                <h3>Or Add a Custom Food:</h3>
-                <input type="text" id="customName" placeholder="Food Name">
-                <input type="number" id="customCalories" placeholder="Calories (kcal)">
-                <input type="number" id="customProtein" placeholder="Protein (g)">
-                <input type="number" id="customCarbs" placeholder="Carbs (g)">
-                <input type="number" id="customFats" placeholder="Fats (g)">
-                <button type="button" class="btn btn-info" id="addFoodBtn">Add Food</button>
-
-                <button type="submit" class="btn btn-warning">Log Meal</button>
+            <form action="/log-meal" method="POST">
+                <input type="text" name="mealName" class="form-control mb-2" placeholder="Meal Name" required>
+                <input type="number" name="calories" class="form-control mb-2" placeholder="Calories" required>
+                <input type="number" name="protein" class="form-control mb-2" placeholder="Protein (g)" required>
+                <input type="number" name="carbs" class="form-control mb-2" placeholder="Carbs (g)" required>
+                <input type="number" name="fats" class="form-control mb-2" placeholder="Fats (g)" required>
+                <input type="number" name="fibers" class="form-control mb-2" placeholder="Fibers (g)" required>
+                <input type="number" name="sodium" class="form-control mb-2" placeholder="Sodium (mg)" required>
+                <button type="submit" class="btn btn-success w-100 mt-3">Submit Meal</button>
             </form>
         </div>
 
-        <!-- Logged Meals -->
+        <!-- List of Logged Meals with Edit and Delete Options -->
         <div class="mt-4">
             <h2>Logged Meals</h2>
-            <ul id="loggedMeals"></ul>
+            <% if (loggedMeals && loggedMeals.length> 0) { %>
+                <ul class="list-group">
+                    <% loggedMeals.forEach(meal=> { %>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>
+                                    <%= meal.meal_name %>
+                                </strong> -
+                                <%= meal.calories %> kcal, Protein: <%= meal.protein %>g,
+                                        Carbs: <%= meal.carbs %>g, Fats: <%= meal.fats %>g,
+                                                Fibers: <%= meal.fibers %>g, Sodium: <%= meal.sodium %>mg
+                                                        <small>(<%= meal.created_at %>)</small>
+                            </div>
+                            <div>
+                                <!-- Edit Form Button -->
+                                <button class="btn btn-sm btn-warning edit-meal-btn" data-meal-id="<%= meal.meal_id %>"
+                                    data-meal-name="<%= meal.meal_name %>" data-calories="<%= meal.calories %>"
+                                    data-protein="<%= meal.protein %>" data-carbs="<%= meal.carbs %>"
+                                    data-fats="<%= meal.fats %>" data-fibers="<%= meal.fibers %>"
+                                    data-sodium="<%= meal.sodium %>">
+                                    Edit
+                                </button>
+                                <!-- Delete Meal -->
+                                <form action="/delete-meal/<%= meal.meal_id %>" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-danger delete-btn">Delete</button>
+                                </form>
+                            </div>
+                        </li>
+                        <!-- Edit form for this meal -->
+                        <li class="list-group-item edit-meal-form" id="edit-form-<%= meal.meal_id %>">
+                            <form action="/edit-meal/<%= meal.meal_id %>" method="POST">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <input type="text" name="mealName" class="form-control mb-2"
+                                            value="<%= meal.meal_name %>" required>
+                                        <input type="number" name="calories" class="form-control mb-2"
+                                            value="<%= meal.calories %>" required>
+                                        <input type="number" name="protein" class="form-control mb-2"
+                                            value="<%= meal.protein %>" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="number" name="carbs" class="form-control mb-2"
+                                            value="<%= meal.carbs %>" required>
+                                        <input type="number" name="fats" class="form-control mb-2"
+                                            value="<%= meal.fats %>" required>
+                                        <input type="number" name="fibers" class="form-control mb-2"
+                                            value="<%= meal.fibers %>" required>
+                                        <input type="number" name="sodium" class="form-control mb-2"
+                                            value="<%= meal.sodium %>" required>
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-success">Save Changes</button>
+                                    <button type="button" class="btn btn-secondary cancel-edit"
+                                        data-meal-id="<%= meal.meal_id %>">Cancel</button>
+                                </div>
+                            </form>
+                        </li>
+                        <% }) %>
+                </ul>
+                <% } else { %>
+                    <p>No meals logged yet. Start by logging your first meal!</p>
+                    <% } %>
         </div>
+
+        <!-- Other Users' Meals Section -->
+        <% if (otherUsersMeals && otherUsersMeals.length> 0) { %>
+            <div class="mt-5">
+                <h2>Community Meals</h2>
+                <ul class="list-group">
+                    <% otherUsersMeals.forEach(meal=> { %>
+                        <li class="list-group-item">
+                            <strong>
+                                <%= meal.username %>
+                            </strong> had <strong>
+                                <%= meal.meal_name %>
+                            </strong> -
+                            <%= meal.calories %> kcal
+                                <small>(<%= meal.created_at %>)</small>
+                        </li>
+                        <% }) %>
+                </ul>
+            </div>
+            <% } %>
     </div>
 
     <script>
-        let meals = JSON.parse(localStorage.getItem("loggedMeals")) || [];
+        document.addEventListener("DOMContentLoaded", () => {
+            const logMealBtn = document.getElementById("logMealBtn");
+            const formContainer = document.getElementById("mealFormContainer");
 
-        function updateMeals() {
-            const mealList = document.getElementById("loggedMeals");
-            mealList.innerHTML = "";
-            meals.forEach((meal, index) => {
-                let li = document.createElement("li");
-                li.innerHTML = `<strong>${meal.name}</strong> - ${meal.calories} kcal
-                                <span class="delete-btn" onclick="deleteMeal(${index})">❌</span>`;
-                mealList.appendChild(li);
+            // Toggle meal form
+            logMealBtn.addEventListener("click", () => {
+                formContainer.classList.toggle("show");
             });
-            localStorage.setItem("loggedMeals", JSON.stringify(meals));
-        }
 
-        function deleteMeal(index) {
-            meals.splice(index, 1);
-            updateMeals();
-        }
+            // Edit meal
+            const editButtons = document.querySelectorAll('.edit-meal-btn');
+            editButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const mealId = button.getAttribute('data-meal-id');
+                    const editForm = document.getElementById(`edit-form-${mealId}`);
+                    editForm.classList.toggle('show');
+                });
+            });
 
-        document.getElementById("logMealBtn").addEventListener("click", function () {
-            let formContainer = document.getElementById("mealFormContainer");
-            formContainer.style.display = formContainer.style.display === "none" ? "block" : "none";
+            // Cancel edit
+            const cancelButtons = document.querySelectorAll('.cancel-edit');
+            cancelButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const mealId = button.getAttribute('data-meal-id');
+                    const editForm = document.getElementById(`edit-form-${mealId}`);
+                    editForm.classList.remove('show');
+                });
+            });
+
+            function fetchProgressData() {
+                fetch('/progress-data')
+                    .then(response => response.json())
+                    .then(data => {
+                        const nutrients = ['calories', 'carbs', 'protein', 'fats', 'fibers', 'sodium'];
+                        const dailyGoal = { calories: 2000, carbs: 300, protein: 150, fats: 70, fibers: 30, sodium: 2300 };
+
+                        const progressHtml = nutrients.map(nutrient => {
+                            const percent = ((data[nutrient] || 0) / dailyGoal[nutrient] * 100).toFixed(1);
+                            return `
+                                <p>${nutrient.charAt(0).toUpperCase() + nutrient.slice(1)} 
+                                (${data[nutrient] || 0} / ${dailyGoal[nutrient]})</p>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar nutrient-${nutrient}" 
+                                         role="progressbar" 
+                                         style="width: ${percent}%; max-width: 100%;">
+                                        ${percent}%
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+
+                        const progressBars = document.getElementById('progressBars');
+                        if (progressBars) {
+                            progressBars.innerHTML = progressHtml;
+                        }
+                    })
+                    .catch(error => console.error('Error fetching progress data:', error));
+            }
+            setInterval(fetchProgressData, 5000);
+            fetchProgressData();
+
+
+            //Fun facts slideshow
+            const funFactsCarousel = document.querySelector('#funFactsSlideshow');
+            const carouselItems = funFactsCarousel.querySelectorAll('.carousel-item');
+
+            const randomIndex = Math.floor(Math.random() * carouselItems.length);
+
+            carouselItems.forEach((item, index) => {
+                item.classList.toggle('active', index === randomIndex);
+            });
+
+            const carousel = new bootstrap.Carousel(funFactsCarousel, {
+                interval: 5000,
+                wrap: true,
+                pause: 'hover'
+            });
+
+            funFactsCarousel.addEventListener('slid.bs.carousel', () => {
+                carousel.cycle();
+            });
         });
-
-        document.getElementById("addFoodBtn").addEventListener("click", function () {
-            const name = document.getElementById("customName").value;
-            const calories = parseInt(document.getElementById("customCalories").value) || 0;
-            if (!name) return alert("Please enter a food name.");
-
-            let newFood = { id: Date.now(), name, calories };
-            let foodList = document.getElementById("foodList");
-
-            let checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            checkbox.name = "selectedFoods";
-            checkbox.value = newFood.id;
-            checkbox.setAttribute("data-food", JSON.stringify(newFood));
-
-            let label = document.createElement("label");
-            label.innerHTML = `${name} - ${calories} kcal`;
-
-            foodList.appendChild(checkbox);
-            foodList.appendChild(label);
-            foodList.appendChild(document.createElement("br"));
-        });
-
-        document.getElementById("mealForm").addEventListener("submit", function (event) {
-            event.preventDefault();
-            const mealName = document.getElementById("mealName").value.trim();
-            if (!mealName) return;
-
-            const selectedFoods = Array.from(document.querySelectorAll('input[name="selectedFoods"]:checked'))
-                .map(input => JSON.parse(input.getAttribute("data-food")));
-
-            let totalCalories = selectedFoods.reduce((sum, food) => sum + food.calories, 0);
-            meals.push({ name: mealName, calories: totalCalories });
-
-            updateMeals();
-            this.reset();
-            document.getElementById("mealFormContainer").style.display = "none";
-        });
-
-        updateMeals();
     </script>
+
     <!-- Footer -->
-    <footer class="bg-dark text-white py-3 text-center">
+    <footer class="bg-dark text-white py-3 text-center mt-5">
         <p>&copy; 2025 Momentum Fitness. All Rights Reserved.</p>
     </footer>
 </body>
+
 </html>
