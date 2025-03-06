@@ -35,6 +35,50 @@
             background: #F1F3F4;
             border-radius: 6px;
         }
+        /* Container to align messages in a column */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Aligns bubbles properly */
+    gap: 10px; /* Adds spacing between bubbles */
+    padding: 10px;
+    max-width: 600px; /* Adjust based on layout */
+    margin: auto; /* Centers the chat container */
+}
+
+/* Chat message bubble styling */
+.post-bubble {
+    max-width: 70%; /* Limits width to look like a chat */
+    padding: 12px 15px;
+    border-radius: 20px;
+    font-size: 16px;
+    word-wrap: break-word;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Left-aligned messages */
+.bubble-left {
+    background-color: #e1ffc7;
+    align-self: flex-start;
+}
+
+/* Right-aligned messages */
+.bubble-right {
+    background-color: #dcf8c6;
+    align-self: flex-end;
+    text-align: right;
+}
+
+/* Style for timestamps */
+.text-muted {
+    font-size: 12px;
+    margin-top: 5px;
+    color: #555;
+    align-self: flex-end;
+}
+
     </style>
 </head>
 <body>
@@ -51,34 +95,25 @@
             <div class="forum-section">
                 <h4 class="mb-3">Community Discussions</h4>
 
+                <!-- Display Posts like chat -->
+                <div class="chat-container">
+                    <% posts.forEach((post, index) => { %>
+                        <div class="post-bubble <%= index % 2 === 0 ? 'bubble-left' : 'bubble-right' %>">
+                            <strong><%= post.username %></strong>
+                            <p><%= post.content %></p>
+                            <small class="text-muted"><%= post.created_at %></small>
+                        </div>
+                    <% }); %>
+                </div>
+                
+                
                 <!-- Post Form -->
                 <form action="/community/<%= community.id %>/post" method="POST" class="mb-4">
                     <textarea name="content" class="form-control" placeholder="Write something..." required></textarea>
                     <button type="submit" class="btn btn-primary mt-2">Post</button>
                 </form>
 
-                <!-- Display Posts with Comments -->
-                <% posts.forEach(post => { %>
-                    <div class="post-container">
-                        <strong><%= post.username %></strong>
-                        <p><%= post.content %></p>
-                        <small class="text-muted"><%= post.created_at %></small>
-
-                        <!-- Comment Form -->
-                        <form action="/community/<%= community.id %>/post/<%= post.id %>/comment" method="POST" class="mt-2">
-                            <textarea name="content" class="form-control" placeholder="Write a comment..." required></textarea>
-                            <button type="submit" class="btn btn-secondary btn-sm mt-2">Comment</button>
-                        </form>
-
-                        <!-- Display Comments -->
-                        <div class="comment-section">
-                            <h6>Comments:</h6>
-                            <div id="comments-<%= post.id %>">
-                                <!-- Comments will be loaded here -->
-                            </div>
-                        </div>
-                    </div>
-                <% }); %>
+                
             </div>
         </div>
 
