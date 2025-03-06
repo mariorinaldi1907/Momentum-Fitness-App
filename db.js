@@ -147,4 +147,58 @@ db.get("SELECT COUNT(*) AS count FROM communities", (err, row) => {
     }
 });
 
+db.run(`
+    CREATE TABLE IF NOT EXISTS community_posts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        community_id INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE
+    )
+`);
+
+db.run(`
+    CREATE TABLE IF NOT EXISTS community_comments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        post_id INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (post_id) REFERENCES community_posts(id) ON DELETE CASCADE
+    )
+`);
+
+db.run(`
+    CREATE TABLE IF NOT EXISTS community_polls (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        community_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        question TEXT NOT NULL,
+        option_1 TEXT NOT NULL,
+        option_2 TEXT NOT NULL,
+        option_3 TEXT DEFAULT NULL,
+        option_4 TEXT DEFAULT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    )
+`);
+
+db.run(`
+    CREATE TABLE IF NOT EXISTS poll_votes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        poll_id INTEGER NOT NULL,
+        choice INTEGER NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (poll_id) REFERENCES community_polls(id) ON DELETE CASCADE
+    )
+`);
+
+
+
 module.exports = db;

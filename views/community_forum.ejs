@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= community.name %> - Forum</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #F8F9FA;
+            font-family: Arial, sans-serif;
+        }
+        .header {
+            background-color: #28A745;
+            padding: 15px;
+            color: white;
+            text-align: center;
+        }
+        .forum-section, .poll-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .post-container, .poll-container {
+            background: #FFF;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .comment-section {
+            margin-top: 10px;
+            padding: 10px;
+            background: #F1F3F4;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <h2><%= community.name %> Forum</h2>
+    <a href="/communities" class="btn btn-light">Back to Communities</a>
+</header>
+
+<main class="container py-4">
+    <div class="row">
+        <!-- Left Column: Community Discussions -->
+        <div class="col-md-7">
+            <div class="forum-section">
+                <h4 class="mb-3">Community Discussions</h4>
+
+                <!-- Post Form -->
+                <form action="/community/<%= community.id %>/post" method="POST" class="mb-4">
+                    <textarea name="content" class="form-control" placeholder="Write something..." required></textarea>
+                    <button type="submit" class="btn btn-primary mt-2">Post</button>
+                </form>
+
+                <!-- Display Posts with Comments -->
+                <% posts.forEach(post => { %>
+                    <div class="post-container">
+                        <strong><%= post.username %></strong>
+                        <p><%= post.content %></p>
+                        <small class="text-muted"><%= post.created_at %></small>
+
+                        <!-- Comment Form -->
+                        <form action="/community/<%= community.id %>/post/<%= post.id %>/comment" method="POST" class="mt-2">
+                            <textarea name="content" class="form-control" placeholder="Write a comment..." required></textarea>
+                            <button type="submit" class="btn btn-secondary btn-sm mt-2">Comment</button>
+                        </form>
+
+                        <!-- Display Comments -->
+                        <div class="comment-section">
+                            <h6>Comments:</h6>
+                            <div id="comments-<%= post.id %>">
+                                <!-- Comments will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+
+        <!-- Right Column: Polls & Surveys -->
+        <div class="col-md-5">
+            <div class="poll-section">
+                <h4 class="mb-3">Community Polls & Surveys</h4>
+
+                <!-- Poll Creation Form -->
+                <form action="/community/<%= community.id %>/polls/create" method="POST" class="mb-4">
+                    <input type="text" name="question" class="form-control mb-2" placeholder="Enter poll question..." required>
+                    <input type="text" name="option_1" class="form-control mb-2" placeholder="Option 1" required>
+                    <input type="text" name="option_2" class="form-control mb-2" placeholder="Option 2" required>
+                    <input type="text" name="option_3" class="form-control mb-2" placeholder="Option 3 (optional)">
+                    <input type="text" name="option_4" class="form-control mb-2" placeholder="Option 4 (optional)">
+                    <button type="submit" class="btn btn-primary">Create Poll</button>
+                </form>
+
+                <!-- Polls Section -->
+                <div id="polls-section">
+                    <h5>Active Polls</h5>
+                    <div id="polls-container">
+                        <!-- Polls will load dynamically here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+
+<script>
+    // Fetch and Display Polls for this Community
+    document.addEventListener("DOMContentLoaded", () => {
+        fetch(`/community/<%= community.id %>/polls`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const container = document.getElementById("polls-container");
+                    data.polls.forEach(poll => {
+                        let optionsHtml = `
+                            <form action="/community/<%= community.id %>/poll/${poll.id}/vote" method="POST">
+                                <div>
+                                    <input type="radio" name="choice" value="1" required> ${poll.option_1} <br>
+                                    <input type="radio" name="choice" value="2"> ${poll.option_2} <br>
+                                    ${poll.option_3 ? `<input type="radio" name="choice" value="3"> ${poll.option_3} <br>` : ""}
+                                    ${poll.option_4 ? `<input type="radio" name="choice" value="4"> ${poll.option_4} <br>` : ""}
+                                </div>
+                                <button type="submit" class="btn btn-success mt-2">Vote</button>
+                            </form>
+                        `;
+
+                        container.innerHTML += `
+                            <div class="poll-container">
+                                <h6>${poll.question} (by ${poll.username})</h6>
+                                ${optionsHtml}
+                            </div>
+                        `;
+                    });
+                }
+            })
+            .catch(err => console.error("Error loading polls:", err));
+    });
+
+    // Fetch and Display Comments for Each Post
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".comment-section").forEach(section => {
+            const postId = section.id.split("-")[1];
+            fetch(`/community/<%= community.id %>/post/${postId}/comments`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        data.comments.forEach(comment => {
+                            section.innerHTML += `<div class="border p-2 mb-2 bg-white">
+                                <strong>${comment.username}</strong>: ${comment.content} <br>
+                                <small class="text-muted">${comment.created_at}</small>
+                            </div>`;
+                        });
+                    }
+                })
+                .catch(err => console.error("Error loading comments:", err));
+        });
+    });
+</script>
+
+</html>
