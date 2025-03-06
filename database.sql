@@ -55,11 +55,35 @@ CREATE TABLE IF NOT EXISTS workout_progress (
 );
 
 CREATE TABLE IF NOT EXISTS sleep_tracker (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+   id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
     date_logged DATETIME DEFAULT CURRENT_TIMESTAMP,
     sleep_hours REAL,
-    sleep_quality INTEGER
+    sleep_quality INTEGER,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS communities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    event_date TEXT NOT NULL,
+    event_time TEXT NOT NULL,
+    max_pax INTEGER NOT NULL,
+    created_by INTEGER NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS user_communities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    community_id INTEGER NOT NULL,
+    joined_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE
+);
+
 
 
 COMMIT;

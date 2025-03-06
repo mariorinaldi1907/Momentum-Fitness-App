@@ -65,7 +65,48 @@ router.post("/login", (req, res) => {
 
         if (isMatch) {
             req.session.userId = user.user_id;
-            res.render("dashboard", { username: user.username }); // Pass username to the dashboard
+            req.session.username = user.username;
+
+            // Fetch the communities the user has joined
+            db.all(`
+                SELECT c.id, c.name, uc.joined_at 
+                FROM communities c
+                JOIN user_communities uc ON c.id = uc.community_id
+                WHERE uc.user_id = ?
+            `, [user.user_id], (err, userCommunities) => {
+                if (err) {
+                    console.error("Error fetching user-joined communities:", err);
+                    return res.send("Error loading dashboard.");
+                }
+
+                // Fetch the latest sleep entry for the logged-in user
+                db.get(`
+                    SELECT sleep_hours, sleep_quality, date_logged
+                    FROM sleep_tracker
+                    WHERE user_id = ?
+                    ORDER BY date_logged DESC
+                    LIMIT 1
+                `, [user.user_id], (err, sleepData) => {
+                    if (err) {
+                        console.error("Error fetching sleep data:", err);
+                        return res.send("Error loading dashboard.");
+                    }
+
+                    console.log("User Sleep Data:", sleepData || "No sleep data found"); // Debugging log
+
+                    if (!sleepData) {
+                        sleepData = { sleep_hours: "N/A", sleep_quality: "N/A", date_logged: "N/A" };
+                    }
+
+                    // Render dashboard with both user communities and sleep data
+                    res.render("dashboard", { 
+                        username: user.username,
+                        userCommunities: userCommunities || [],
+                        sleepData: sleepData // ✅ Display sleep data immediately after login
+                    });
+                });
+            });
+
         } else {
             res.send("Incorrect password.");
         }
@@ -73,21 +114,56 @@ router.post("/login", (req, res) => {
 });
 
 
-// DASHBOARD - Protected Route
+
 router.get("/dashboard", (req, res) => {
     if (!req.session.userId) {
         return res.redirect("/login");
     }
 
-    db.get("SELECT * FROM user_websites WHERE user_id = ?", [req.session.userId], (err, website) => {
+    const userId = req.session.userId;
+
+    // Fetch user_communities data
+    db.all(`
+        SELECT uc.id, uc.user_id, uc.community_id, uc.joined_at, c.name
+        FROM user_communities uc
+        JOIN communities c ON uc.community_id = c.id
+        WHERE uc.user_id = ?
+    `, [userId], (err, userCommunities) => {
         if (err) {
-            console.error("Error fetching website:", err);
+            console.error("Error fetching user_communities:", err);
             return res.send("Error loading dashboard.");
         }
 
-        res.render("dashboard", { website });
+        // Fetch the latest sleep entry for the logged-in user
+        db.get(`
+            SELECT sleep_hours, sleep_quality, date_logged
+            FROM sleep_tracker
+            WHERE user_id = ?
+            ORDER BY date_logged DESC
+            LIMIT 1
+        `, [userId], (err, sleepData) => {
+            if (err) {
+                console.error("Error fetching sleep data:", err);
+                return res.send("Error loading dashboard.");
+            }
+
+            console.log("User Sleep Data:", sleepData || "No sleep data found"); // Debugging log
+
+            if (!sleepData) {
+                sleepData = { sleep_hours: "N/A", sleep_quality: "N/A", date_logged: "N/A" };
+            }
+
+            res.render("dashboard", { 
+                username: req.session.username || "User",
+                userCommunities: userCommunities || [],
+                sleepData: sleepData // ✅ Only the logged-in user's sleep data
+            });
+        });
     });
 });
+
+
+
 
 // LOGOUT - Destroy Session and Redirect
 router.get("/logout", (req, res) => {

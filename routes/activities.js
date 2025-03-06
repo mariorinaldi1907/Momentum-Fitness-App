@@ -125,31 +125,34 @@ router.post("/log/workout", (req, res) => {
 
 
 
-// GET - Sleep Tracker Page
+// GET - Sleep Tracker Page (Only Fetch Logged-in User's Data)
 router.get("/sleep-tracker", (req, res) => {
     if (!req.session.userId) {
         return res.redirect("/login");
     }
 
+    const userId = req.session.userId;
+
     const query = `
         SELECT sleep_hours, sleep_quality, date_logged 
         FROM sleep_tracker 
+        WHERE user_id = ? 
         ORDER BY date_logged DESC
     `;
 
-    db.all(query, [], (err, sleepData) => {
+    db.all(query, [userId], (err, sleepData) => {
         if (err) {
             console.error("SQL Error fetching sleep data:", err.message);
             return res.send("Error fetching sleep data: " + err.message);
         }
 
         if (!sleepData || sleepData.length === 0) {
-            console.warn("No sleep data found.");
+            console.warn("No sleep data found for user:", userId);
         } else {
-            console.log("Fetched sleep data:", sleepData);
+            console.log("Fetched sleep data for user:", userId, sleepData);
         }
 
-        // Calculate average values
+        // Calculate average values (Only for the logged-in user)
         const avgSleepHours = sleepData.length > 0 
             ? (sleepData.reduce((sum, entry) => sum + (entry.sleep_hours || 0), 0) / sleepData.length).toFixed(1) 
             : "0.0";
@@ -158,10 +161,14 @@ router.get("/sleep-tracker", (req, res) => {
             ? (sleepData.reduce((sum, entry) => sum + (entry.sleep_quality || 0), 0) / sleepData.length).toFixed(1) 
             : "0.0";
 
-        res.render("sleep_tracker", { sleepData, avgSleepHours, avgSleepQuality });
+        res.render("sleep_tracker", { 
+            username: req.session.username,
+            sleepData, // ✅ Only data for the logged-in user
+            avgSleepHours,
+            avgSleepQuality
+        });
     });
 });
-
 
 // POST - Log Sleep Data
 router.post("/log/sleep", (req, res) => {
@@ -169,31 +176,37 @@ router.post("/log/sleep", (req, res) => {
         return res.redirect("/login");
     }
 
+    const userId = req.session.userId; // Get the logged-in user's ID
     const { sleep_hours, sleep_quality } = req.body;
 
+    // Validate sleep hours (must be between 0-24)
     if (isNaN(sleep_hours) || sleep_hours < 0 || sleep_hours > 24) {
         return res.send("Invalid sleep hours. Must be between 0 and 24.");
     }
 
+    // Validate sleep quality (must be between 1-10)
     if (isNaN(sleep_quality) || sleep_quality < 1 || sleep_quality > 10) {
         return res.send("Invalid sleep quality. Must be between 1 and 10.");
     }
 
     const date_logged = new Date().toISOString();
 
+    // Insert the sleep data for the respective user
     const query = `
-        INSERT INTO sleep_tracker (sleep_hours, sleep_quality, date_logged)
-        VALUES (?, ?, ?)
+        INSERT INTO sleep_tracker (user_id, sleep_hours, sleep_quality, date_logged)
+        VALUES (?, ?, ?, ?)
     `;
 
-    db.run(query, [sleep_hours, sleep_quality, date_logged], (err) => {
+    db.run(query, [userId, sleep_hours, sleep_quality, date_logged], (err) => {
         if (err) {
             console.error("SQL Error logging sleep data:", err.message);
             return res.send("Error logging sleep data: " + err.message);
         }
-        res.redirect("/sleep-tracker");
+        res.redirect("/sleep-tracker"); // Redirect back to dashboard to show updated sleep data
     });
 });
+
+
 
 
 // GET - Show Body Measurements Logging Page

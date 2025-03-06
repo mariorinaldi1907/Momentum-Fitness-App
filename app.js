@@ -27,11 +27,14 @@ const authRoutes = require("./routes/auth");
 const indexRoutes = require("./routes/index");
 const activitiesRoutes = require("./routes/activities");
 const nutritionRoutes = require("./routes/nutrition");
+const communitiesRoutes = require("./routes/communities");
+
 
 app.use("/", indexRoutes);
 app.use("/", authRoutes);
 app.use("/", activitiesRoutes);
 app.use("/", nutritionRoutes);
+app.use("/", communitiesRoutes);
 
 // Start the server
 app.listen(PORT, () => {

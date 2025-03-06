@@ -13,7 +13,7 @@
         <div class="container d-flex justify-content-between align-items-center">
             <h1 class="h3 text-success mb-0">MOMENTUM</h1>
             <nav>
-                <a href="/" class="btn btn-link">Home</a>
+                <a href="/dashboard" class="btn btn-link">Home</a>
                 <a href="/activities" class="btn btn-link">Activities</a>
                 <a href="/nutrition" class="btn btn-link">Nutrition</a>
                 <a href="/communities" class="btn btn-link">Communities</a>
@@ -49,20 +49,47 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card bg-danger text-center text-white">
-                    <div class="card-body py-5">
-                        <h3 class="card-title">Your Communities</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card bg-primary text-center text-white">
-                    <div class="card-body py-5">
-                        <h3 class="card-title">Your Sleep Statistics</h3>
-                    </div>
-                </div>
-            </div>
+            <!-- User-Joined Communities Section -->
+<div class="col-md-6">
+    <div class="card bg-danger text-center text-white">
+        <div class="card-body py-5">
+            <h3 class="card-title">Your Communities</h3>
+            <% if (typeof userCommunities !== 'undefined' && userCommunities.length > 0) { %>
+                <ul class="list-group mt-3">
+                    <% userCommunities.forEach(community => { %>
+                        <li class="list-group-item bg-light text-dark">
+                            <strong>Community:</strong> <%= community.name %> <br>
+                            <strong>Joined On:</strong> <%= community.joined_at %>
+                        </li>
+                    <% }) %>
+                </ul>
+            <% } else { %>
+                <p>You haven't joined any communities yet.</p>
+            <% } %>
+        </div>
+    </div>
+</div>
+ <!-- User Sleep Statistics Section -->
+<!-- User Sleep Statistics Section -->
+<div class="col-md-6">
+    <div class="card bg-primary text-center text-white">
+        <div class="card-body py-5">
+            <h3 class="card-title">Your Sleep Statistics</h3>
+            <% if (typeof sleepData !== "undefined" && sleepData.sleep_hours !== "N/A") { %>
+                <p><strong>Sleep Hours:</strong> <%= sleepData.sleep_hours %> hrs</p>
+                <p><strong>Sleep Quality:</strong> <%= sleepData.sleep_quality %>/10</p>
+                <p><strong>Last Logged:</strong> 
+                    <%= new Date(sleepData.date_logged).toLocaleString("en-US", { 
+                        year: 'numeric', month: 'short', day: '2-digit', 
+                        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
+                    }) %>
+                </p>
+            <% } else { %>
+                <p>No sleep data logged yet.</p>
+            <% } %>
+        </div>
+    </div>
+</div>
         </div>
     </main>
 
