@@ -3,7 +3,7 @@ const router = express.Router();
 
 // Route for the pre-login page (Homepage)
 router.get("/", (req, res) => {
-    res.render("prelogin"); // Ensure `views/prelogin.ejs` exists
+    res.render("prelogin");
 });
 
 module.exports = router;
