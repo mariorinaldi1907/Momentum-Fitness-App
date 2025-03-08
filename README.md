@@ -51,6 +51,8 @@ npm run start
 
 OR 
 
+npm install
+
 npm run build-db
 
 node app.js
