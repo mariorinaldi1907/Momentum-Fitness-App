@@ -1,130 +1,70 @@
-# Momentum Fitness App
+# 📌 Momentum Fitness App
 
-A **full-stack fitness tracking web application** that helps users track their **workouts, nutrition, sleep, body measurements**, and participate in **community discussions**. Built using **Node.js, Express.js, EJS, SQLite3**, and Bootstrap for frontend styling.
+Momentum Fitness is a **comprehensive fitness tracking application** that allows users to monitor their **workouts, nutrition, sleep, and community engagement** all in one place.
 
-## Table of Contents
-1. [Features](#features)
-2. [Technology Stack](#technology-stack)
-3. [Installation Guide](#installation-guide)
-4. [Running on Localhost](#running-on-localhost)
-5. [Database Setup](#database-setup)
-6. [Environment Variables](#environment-variables)
-7. [Project Structure](#project-structure)
-8. [API Routes](#api-routes)
-9. [Screenshots](#screenshots)
-10. [Future Enhancements](#future-enhancements)
+The app is designed to help users stay **consistent, track progress, and connect with a supportive fitness community**.
 
 ---
 
-## 1. Features
+## 1. Installation Guide
 
-### **User Authentication**
-- Users can **sign up** and **log in** securely with **bcrypt password hashing**.
-- **Session-based authentication** for persistent login.
+### **Step 1: Clone the Repository**
+git clone https://github.com/your-username/momentum-fitness.git
+cd momentum-fitness
 
-### **Fitness Tracking**
-- **Activities & Workouts:** Log and track exercise routines.
-- **Nutrition Tracker:** Log meals and choose from **predefined meal plans**.
-- **Sleep Tracker:** Log sleep hours and quality.
-- **Body Measurements:** Track weight, BMI, body fat percentage, and muscle mass.
 
-### **Community Engagement**
-- Users can **join communities** and discuss fitness topics.
-- **Community forums** for sharing posts and comments.
-
-### **Dashboard**
-- Shows **fitness progress, meal plans, latest activities, and sleep data**.
-- Highlights **featured fitness programs** in a carousel.
-
-### **Progress Visualization**
-- Interactive **charts and progress bars** for tracking **calories, protein, and fitness goals**.
-
----
-
-## 2. Technology Stack
-
-### **Backend**
-- **Node.js** with **Express.js**
-- **SQLite3** (Lightweight database)
-- **bcrypt.js** (Password hashing)
-- **Express-Session** (User authentication)
-
-### **Frontend**
-- **EJS (Embedded JavaScript Templates)** for dynamic content rendering
-- **Bootstrap 5** for UI design
-- **Chart.js** for progress visualization
-
----
-
-## 3. Installation Guide
-
-### **Prerequisites**
-Ensure you have the following installed:
-- **Node.js** (LTS version recommended)
-- **SQLite3** (For database management)
-- **Git** (To clone the repository)
-
-### **Steps to Install**
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/momentum-fitness.git
-   cd momentum-fitness
-Install dependencies
-
-bash
-Copy
-Edit
+### **Step 2: Install Dependencies
 npm install
-Set up environment variables
 
-Create a .env file in the root directory:
-env
-Copy
-Edit
-PORT=3000
-SESSION_SECRET=your_secret_key
-Set up the database
 
-bash
-Copy
-Edit
-npm run setup-db
-This will execute database.sql and create the necessary tables.
-4. Running on Localhost
-Start the server
-bash
-Copy
-Edit
-npm start
-The app will run on http://localhost:3000 by default.
-Alternative (Using nodemon for development)
-bash
-Copy
-Edit
-npm run dev
-This will automatically restart the server on code changes.
-5. Database Setup
-The app uses SQLite3 for lightweight storage.
-To manually reset and set up the database:
+### **Step 3: Setup the Database
+Initialize the database by running:
 
-bash
-Copy
-Edit
 sqlite3 momentum_fitness.db < database.sql
-This will execute all CREATE TABLE queries and prepare the database.
-6. Environment Variables
-The app uses a .env file for secret configurations.
-Ensure the following variables are correctly set:
-env
-Copy
-Edit
+This will create necessary tables and configure the database.
+
+### **Step 4: Set Up Environment Variables
+Create a .env file in the project root and add:
+
 PORT=3000
 SESSION_SECRET=your_secret_key
-You can also customize PORT if needed.
-7. Project Structure
-bash
-Copy
-Edit
+
+
+## 2. Running on Localhost
+Start the Server
+Run the following command to start the server:
+
+npm start
+The application will run on http://localhost:3000 by default.
+Run in Development Mode
+To automatically restart the server when changes are made:
+
+npm run dev
+This requires nodemon (installed with npm install).
+
+## 3. Database Setup
+The application uses SQLite3 as its database.
+To manually initialize the database, run:
+
+sqlite3 momentum_fitness.db < database.sql
+This will:
+
+Create all necessary tables.
+Set up relationships between users, meals, workouts, and communities.
+
+## 4. Environment Variables
+The project requires environment variables to be stored in a .env file.
+
+Required Variables
+Create a .env file in the root directory and add:
+
+PORT=3000
+SESSION_SECRET=your_secret_key
+PORT: Define the port on which the server runs.
+SESSION_SECRET: Used for session encryption and authentication.
+
+## 5. Project Structure
+
 momentum-fitness/
 │-- public/               # Static assets (CSS, images)
 │-- views/                # EJS templates for frontend
@@ -140,43 +80,49 @@ momentum-fitness/
 │-- app.js                # Main server file
 │-- package.json          # Dependencies & scripts
 └-- .env                  # Environment variables
-8. API Routes
-Authentication
-GET /login → Renders login page
-POST /login → Handles user login
-GET /signup → Renders signup page
-POST /signup → Registers new user
-GET /logout → Logs out user
-Fitness & Nutrition
-GET /activities → Fetches fitness activities
-POST /activities/log → Logs user progress
-GET /nutrition → Fetches logged meals & meal plans
-POST /log-meal → Logs a meal
-POST /select-meal-plan → Selects a predefined meal plan
-Sleep Tracker
-GET /sleep-tracker → Fetches sleep data
-POST /log/sleep → Logs sleep hours & quality
-Community
-GET /communities → Fetches joined communities
-POST /communities/join → Joins a community
-POST /communities/post → Posts a discussion
-9. Screenshots
-(Add relevant UI screenshots here for better visualization.)
 
-10. Future Enhancements
+
+## 6. API Routes
+Authentication
+GET /login → Renders login page.
+POST /login → Handles user login.
+GET /signup → Renders signup page.
+POST /signup → Registers a new user.
+GET /logout → Logs out user.
+Fitness & Nutrition
+GET /activities → Fetches fitness activities.
+POST /activities/log → Logs user workout progress.
+GET /nutrition → Fetches logged meals & meal plans.
+POST /log-meal → Logs a meal.
+POST /select-meal-plan → Selects a predefined meal plan.
+Sleep Tracker
+GET /sleep-tracker → Fetches sleep data.
+POST /log/sleep → Logs sleep hours & quality.
+Community Engagement
+GET /communities → Fetches joined communities.
+POST /communities/join → Joins a community.
+POST /communities/post → Posts a discussion.
+
+## 7. Screenshots
+(Add screenshots of the UI for better visualization.)
+
+## 8. Future Enhancements
 ✅ Upcoming Features
 AI-powered meal recommendations
 Google Fit & Apple Health integration
 Workout video tutorials
 Leaderboard for fitness challenges
-Contributing
+Personalized fitness & health reports
+
+## 9. Contributing
 Want to contribute?
 Fork the repo and create a pull request with detailed changes.
 
 Report Issues
 Found a bug? Open an issue here.
 
-License
+## 10. License
 This project is open-source under the MIT License.
 
 🚀 Enjoy using Momentum Fitness! Stay healthy & active! 🚀
+
