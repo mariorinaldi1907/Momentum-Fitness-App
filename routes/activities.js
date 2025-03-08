@@ -2,7 +2,7 @@ const express = require("express");
 const db = require("../db");
 const router = express.Router();
 
-// GET - Show Activities Page with Recommended Workouts
+// GET - Show Activities Page
 router.get("/activities", (req, res) => {
     if (!req.session.userId) {
         return res.redirect("/login");
@@ -10,21 +10,13 @@ router.get("/activities", (req, res) => {
 
     const userId = req.session.userId;
 
-    const query = "SELECT * FROM activities";  // Fetch all activities
-
-    db.all(query, [], (err, activities) => {
+    db.all("SELECT * FROM activities", [], (err, activities) => {
         if (err) {
             console.error("DATABASE ERROR:", err);
-            return res.send("Error loading activities. Check the server logs.");
+            return res.send('<script>alert("Error loading activities. Please try again."); window.location="/dashboard";</script>');
         }
 
-        if (activities.length === 0) {
-            console.log("No activities found in the database.");
-        } else {
-            console.log("Fetched activities:", activities);
-        }
-
-        // Organize workouts into categories based on predefined types
+        // Organize workouts into categories
         const recommendedWorkouts = {
             highIntensity: activities.filter(a => a.category.toLowerCase() === "high-intensity"),
             strength: activities.filter(a => a.category.toLowerCase() === "strength"),
@@ -32,11 +24,10 @@ router.get("/activities", (req, res) => {
             cardio: activities.filter(a => a.category.toLowerCase() === "cardio")
         };
 
-        // Fetch user progress data
         db.all("SELECT * FROM user_progress WHERE user_id = ?", [userId], (err, progressData) => {
             if (err) {
                 console.error("Error fetching progress data:", err);
-                return res.send("Error loading progress.");
+                return res.send('<script>alert("Error loading progress. Please try again."); window.location="/dashboard";</script>');
             }
 
             res.render("activities", {
@@ -63,9 +54,9 @@ router.post("/activities/log", (req, res) => {
         (err) => {
             if (err) {
                 console.error("Error logging activity:", err);
-                return res.send("Error logging activity.");
+                return res.send('<script>alert("Error logging activity. Please try again."); window.location="/activities";</script>');
             }
-            res.send('<script>alert("Successfully Logged!"); window.location="/your-progress";</script>');
+            res.send('<script>alert("Activity successfully logged!"); window.location="/activities";</script>');
         }
     );
 });
@@ -171,40 +162,54 @@ router.get("/sleep-tracker", (req, res) => {
 });
 
 // POST - Log Sleep Data
+// POST - Log Sleep Data
 router.post("/log/sleep", (req, res) => {
     if (!req.session.userId) {
         return res.redirect("/login");
     }
 
-    const userId = req.session.userId; // Get the logged-in user's ID
+    const userId = req.session.userId;
     const { sleep_hours, sleep_quality } = req.body;
 
-    // Validate sleep hours (must be between 0-24)
-    if (isNaN(sleep_hours) || sleep_hours < 0 || sleep_hours > 24) {
-        return res.send("Invalid sleep hours. Must be between 0 and 24.");
+    let errorMessage = "";
+
+    if (!sleep_hours || isNaN(sleep_hours) || sleep_hours < 0 || sleep_hours > 24) {
+        errorMessage = "Invalid sleep hours. Must be between 0 and 24.";
+    } else if (!sleep_quality || isNaN(sleep_quality) || sleep_quality < 1 || sleep_quality > 10) {
+        errorMessage = "Invalid sleep quality. Must be between 1 and 10.";
     }
 
-    // Validate sleep quality (must be between 1-10)
-    if (isNaN(sleep_quality) || sleep_quality < 1 || sleep_quality > 10) {
-        return res.send("Invalid sleep quality. Must be between 1 and 10.");
+    if (errorMessage) {
+        return db.all(`
+            SELECT sleep_hours, sleep_quality, date_logged 
+            FROM sleep_tracker 
+            WHERE user_id = ? 
+            ORDER BY date_logged DESC`,
+            [userId], 
+            (err, sleepData) => {
+                if (err) {
+                    console.error("Error fetching sleep data:", err);
+                    return res.render("sleep_tracker", { sleepData, username: req.session.username, error: "Error fetching sleep data." });
+                }
+                return res.render("sleep_tracker", { sleepData, username: req.session.username, error: errorMessage });
+            }
+        );
     }
 
-    const date_logged = new Date().toISOString();
-
-    // Insert the sleep data for the respective user
-    const query = `
+    db.run(`
         INSERT INTO sleep_tracker (user_id, sleep_hours, sleep_quality, date_logged)
-        VALUES (?, ?, ?, ?)
-    `;
-
-    db.run(query, [userId, sleep_hours, sleep_quality, date_logged], (err) => {
-        if (err) {
-            console.error("SQL Error logging sleep data:", err.message);
-            return res.send("Error logging sleep data: " + err.message);
+        VALUES (?, ?, ?, datetime('now'))`,
+        [userId, sleep_hours, sleep_quality],
+        (err) => {
+            if (err) {
+                console.error("Error logging sleep data:", err);
+                return res.render("sleep_tracker", { sleepData: [], username: req.session.username, error: "Error logging sleep data. Please try again." });
+            }
+            res.redirect("/sleep-tracker");
         }
-        res.redirect("/sleep-tracker"); // Redirect back to dashboard to show updated sleep data
-    });
+    );
 });
+
 
 
 

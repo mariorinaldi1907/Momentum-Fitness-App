@@ -46,6 +46,11 @@
             <img src="/images/logo.png" alt="Momentum Fitness Logo">
         </div>
         <h2 class="mb-4">CREATE YOUR ACCOUNT</h2>
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger text-center" id="errorMessage">
+                <%= error %>
+            </div>
+        <% } %>        
         <form action="/signup" method="POST">
             <input type="text" name="username" class="form-control" placeholder="Enter Username" required>
             <input type="email" name="email" class="form-control" placeholder="Enter Email" required>
@@ -57,4 +62,13 @@
         </div>
     </div>
 </body>
+<script>
+    // Auto-hide error message after 3 seconds
+    setTimeout(() => {
+        const errorMessage = document.getElementById("errorMessage");
+        if (errorMessage) {
+            errorMessage.style.display = "none";
+        }
+    }, 3000);
+</script>
 </html>

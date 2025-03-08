@@ -6,7 +6,7 @@ const router = express.Router();
 
 // SIGNUP - Show Signup Page
 router.get("/signup", (req, res) => {
-    res.render("signup");
+    res.render("signup", { error: null });
 });
 
 router.post("/signup", async (req, res) => {
@@ -16,12 +16,11 @@ router.post("/signup", async (req, res) => {
     db.get("SELECT * FROM users WHERE username = ? OR email = ?", [username, email], async (err, user) => {
         if (err) {
             console.error("Error querying database:", err);
-            return res.send("An error occurred.");
+            return res.render("signup", { error: "An error occurred. Please try again." });
         }
 
         if (user) {
-            // If user exists, send a friendly error message
-            return res.send("Username or email already exists. Please choose a different one.");
+            return res.render("signup", { error: "Username or email already exists. Try another one." });
         }
 
         // Hash the password
@@ -34,7 +33,7 @@ router.post("/signup", async (req, res) => {
             (err) => {
                 if (err) {
                     console.error("Signup error:", err);
-                    return res.send("An error occurred while signing up.");
+                    return res.render("signup", { error: "An error occurred while signing up." });
                 }
                 res.redirect("/login"); // Redirect to login page
             }
@@ -42,10 +41,9 @@ router.post("/signup", async (req, res) => {
     });
 });
 
-
 // LOGIN - Show Login Page
 router.get("/login", (req, res) => {
-    res.render("login");
+    res.render("login", { error: null });
 });
 
 router.post("/login", (req, res) => {
@@ -54,11 +52,11 @@ router.post("/login", (req, res) => {
     db.get("SELECT * FROM users WHERE username = ?", [username], async (err, user) => {
         if (err) {
             console.error("Login error:", err);
-            return res.send("An error occurred.");
+            return res.render("login", { error: "An error occurred. Please try again." });
         }
 
         if (!user) {
-            return res.send("User not found.");
+            return res.render("login", { error: "User not found. Please check your username." });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -76,7 +74,7 @@ router.post("/login", (req, res) => {
             `, [user.user_id], (err, userCommunities) => {
                 if (err) {
                     console.error("Error fetching user-joined communities:", err);
-                    return res.send("Error loading dashboard.");
+                    return res.render("login", { error: "Error loading dashboard." });
                 }
 
                 // Fetch the latest sleep entry for the logged-in user
@@ -89,32 +87,29 @@ router.post("/login", (req, res) => {
                 `, [user.user_id], (err, sleepData) => {
                     if (err) {
                         console.error("Error fetching sleep data:", err);
-                        return res.send("Error loading dashboard.");
+                        return res.render("login", { error: "Error loading dashboard." });
                     }
-
-                    console.log("User Sleep Data:", sleepData || "No sleep data found"); // Debugging log
 
                     if (!sleepData) {
                         sleepData = { sleep_hours: "N/A", sleep_quality: "N/A", date_logged: "N/A" };
                     }
 
-                    // Render dashboard with both user communities and sleep data
+                    // Render dashboard with user communities and sleep data
                     res.render("dashboard", { 
                         username: user.username,
                         userCommunities: userCommunities || [],
-                        sleepData: sleepData // ✅ Display sleep data immediately after login
+                        sleepData: sleepData
                     });
                 });
             });
 
         } else {
-            res.send("Incorrect password.");
+            return res.render("login", { error: "Incorrect password. Please try again." });
         }
     });
 });
 
-
-
+// DASHBOARD
 router.get("/dashboard", (req, res) => {
     if (!req.session.userId) {
         return res.redirect("/login");
@@ -131,7 +126,7 @@ router.get("/dashboard", (req, res) => {
     `, [userId], (err, userCommunities) => {
         if (err) {
             console.error("Error fetching user_communities:", err);
-            return res.send("Error loading dashboard.");
+            return res.render("dashboard", { error: "Error loading dashboard." });
         }
 
         // Fetch the latest sleep entry for the logged-in user
@@ -144,10 +139,8 @@ router.get("/dashboard", (req, res) => {
         `, [userId], (err, sleepData) => {
             if (err) {
                 console.error("Error fetching sleep data:", err);
-                return res.send("Error loading dashboard.");
+                return res.render("dashboard", { error: "Error loading dashboard." });
             }
-
-            console.log("User Sleep Data:", sleepData || "No sleep data found"); // Debugging log
 
             if (!sleepData) {
                 sleepData = { sleep_hours: "N/A", sleep_quality: "N/A", date_logged: "N/A" };
@@ -156,16 +149,13 @@ router.get("/dashboard", (req, res) => {
             res.render("dashboard", { 
                 username: req.session.username || "User",
                 userCommunities: userCommunities || [],
-                sleepData: sleepData // ✅ Only the logged-in user's sleep data
+                sleepData: sleepData
             });
         });
     });
 });
 
-
-
-
-// LOGOUT - Destroy Session and Redirect
+// LOGOUT
 router.get("/logout", (req, res) => {
     req.session.destroy((err) => {
         if (err) {
