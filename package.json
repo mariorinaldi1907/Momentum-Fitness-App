@@ -1,7 +1,7 @@
 {
-  "name": "cm2040_template",
+  "name": "Momentum Fitness App",
   "version": "1.0.0",
-  "description": "A template for the mid-term assignment",
+  "description": "Agile Software Programming",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
