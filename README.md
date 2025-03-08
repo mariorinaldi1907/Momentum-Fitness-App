@@ -42,14 +42,17 @@ To automatically restart the server when changes are made:
 npm run dev
 This requires nodemon (installed with npm install).
 
-# Ways to start the programme:
+## Ways to start the programme:
 npm install 
+
 npm run build-db
+
 npm run start 
 
 OR 
 
 npm run build-db
+
 node app.js
 
 ## 3. Database Setup
